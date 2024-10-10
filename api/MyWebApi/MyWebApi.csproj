@@ -12,4 +12,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MyWebApi.Application\MyWebApi.Application.csproj" />
+    <ProjectReference Include="..\MyWebApi.Integration\MyWebApi.Integration.csproj" />
+  </ItemGroup>
+
 </Project>

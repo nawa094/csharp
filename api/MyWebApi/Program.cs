@@ -1,4 +1,9 @@
 
+using MyWebApi.Application.Services.Joke;
+using MyWebApi.Configuration;
+using MyWebApi.Integration.ChuckNorrisApi.Clients;
+using MyWebApi.Integration.ChuckNorrisApi.Services;
+
 namespace MyWebApi;
 
 public class Program
@@ -10,9 +15,23 @@ public class Program
         // Add services to the container.
         builder.Services.AddAuthorization();
 
+        builder.Services.AddTransient<IJokeService, JokeService>();
+        builder.Services.AddTransient<IChuckNorrisApiIntegrationService, ChuckNorrisApiIntegrationService>();
+
+        // Register the typed HttpClient with the interface
+        builder.Services.AddHttpClient<IChuckNorrisApiIntegrationClient, ChuckNorrisApiIntegrationClient>(client =>
+        {
+            var settings = new ChuckNorrisApiConfiguration();
+            builder.Configuration.GetSection(ChuckNorrisApiConfiguration.SectionName).Bind(settings);
+
+            client.BaseAddress = new Uri(settings.BaseUrl);
+        });
+
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+
+        builder.Services.AddControllers();
 
         var app = builder.Build();
 
@@ -27,25 +46,7 @@ public class Program
 
         app.UseAuthorization();
 
-        var summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
-
-        app.MapGet("/weatherforecast", (HttpContext httpContext) =>
-        {
-            var forecast =  Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                {
-                    Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    TemperatureC = Random.Shared.Next(-20, 55),
-                    Summary = summaries[Random.Shared.Next(summaries.Length)]
-                })
-                .ToArray();
-            return forecast;
-        })
-        .WithName("GetWeatherForecast")
-        .WithOpenApi();
+        app.MapControllers();
 
         app.Run();
     }
